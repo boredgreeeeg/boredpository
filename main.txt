@@ -1,0 +1,103 @@
+#Библиотеки
+
+import tkinter as tk
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+import numpy as np
+import warnings
+warnings.filterwarnings('ignore')
+
+#Создание функций
+
+def all(x,t_p,h):
+	tvp_data = pd.read_excel('nauch1.xlsx')
+	model = LinearRegression()
+	Y = tvp_data['h_обм']
+	X = tvp_data[['t_p', 't_k', 't_k2']]
+	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=10)
+	model.fit(X_train, y_train)
+
+	#Проверка точности полученных обучением значений
+
+	koefdeterm = model.score(X_test, y_test)
+	l = True
+	while 1:
+		xp = x + h
+		xl = x - h
+		hcur = model.predict(np.array([[t_p, x, x * x]]))
+		hp = model.predict(np.array([[t_p, xp, xp * xp]])) 
+		hl = model.predict(np.array([[t_p, xl, xl * xl]]))
+
+		l = (hp < hcur or hl < hcur) and (0 < x < 1800)
+		hmin = min(hp, hl)
+	if l:
+		if (hmin == hp): x = xp
+		if (hmin == hl): x = xl
+		print(hcur)
+		print(x)
+
+	print('final t =', x)
+	print('final h =', hcur[0])
+	return x, hcur[0]
+
+def start():
+	x = float(x_entr.get())
+	t_p = float(t_p_entr.get())
+	h = float(h_entr.get())
+	x, cur = all(x,t_p,h)
+	x_label.configure(text=x)
+	cur_label.configure(text=round(cur, 2))
+
+#Начальные параметры
+
+win = tk.Tk()
+win.title("Tubular Furnace Manager")
+frame = tk.Frame(win)
+frame.pack()
+
+#Параметры окна
+
+h=215
+w=280
+
+photo = tk.PhotoImage(file="pngegg-32.png") win.iconphoto(False, photo) win.config(bg="white")
+win.geometry(f"{w}x{h}+500+230")
+win. resizable(False, False)
+
+#Параметры названий входящих данных
+
+vxodtemp = tk.Label(frame, text="Current temperature")
+vxodtemp.grid(row=1, column=1, padx=5, pady=5)
+vxodt_p = tk.Label(frame, text="Current dustchamber t/p")
+vxodt_p.grid(row=2, column=1, padx=5,pady=5)
+vxodshag = tk.Label(frame, text="Accuracy (in steps)")
+vxodshag.grid(row=3, column=1, padx=5, pady=5)
+
+#Параметры полей ввода данных
+
+x_entr = tk.Entry(frame, width=10)
+t_p_entr = tk.Entry(frame, width=10)
+h_entr = tk.Entry(frame, width=10)
+x_entr.grid(row=1, column=2 , padx=5 , pady=5)
+t_p_entr.grid(row=2, column=2 ,padx=5 , pady=5)
+h_entr.grid(row=3, column=2 ,padx=5 , pady=5)
+
+#Параметры названий результата
+
+label_1 = tk.Label(frame, text='Best temperature mode:')
+label_1.grid(row=9, column=1, padx=5,pady=5)
+x_label = tk.Label(frame)
+x_label.grid(row=9, column=2, padx=5, pady=5)
+label_2 = tk.Label(frame, text='Best layer height:')
+cur_label = tk.Label(frame) 
+cur_label.grid(row=10, column=2, padx=5,pady=5)
+label_2.grid(row=10, column=1, padx=5, pady=5)
+
+#Параметры кнопки активации
+
+show_button = tk.Button(frame,text='count best', width=15, command=start)
+show_button.grid(row=8, column=1 , columnspan=2, padx=5 , pady=5)
+win.mainloop()
