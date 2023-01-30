@@ -1,2 +1,2 @@
 # boredpository
-aiaiaiaiaiaiaiai
+ai study projects
